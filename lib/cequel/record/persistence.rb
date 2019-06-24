@@ -179,13 +179,15 @@ module Cequel
       #   seconds
       # @option options [Time] :timestamp the writetime to use for the column
       #   updates
+      # @option options [Boolean] :if_exists defines if `IF EXISTS` modifier
+      #   should be added to the update statement.
       # @return [Boolean] true if record saved successfully, false if invalid
       #
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency, :ttl, :timestamp)
-        if new_record? then create(options)
+        options.assert_valid_keys(:consistency, :ttl, :timestamp, :if_exists)
+        if new_record? then create(options.except(:if_exists))
         else update(options)
         end
         @new_record = false
@@ -196,15 +198,18 @@ module Cequel
       # Set attributes and save the record
       #
       # @param attributes [Hash] hash of attributes to update
+      # @option options [Boolean] :if_exists defines if `IF EXISTS` modifier
+      #   should be added to the update statement.
       # @return [Boolean] true if saved successfully
       #
       # @see #save
       # @see Properties#attributes=
       # @see Validations#update_attributes!
       #
-      def update_attributes(attributes)
+      def update_attributes(attributes, options = {})
+        options.assert_valid_keys(:if_exists)
         self.attributes = attributes
-        save
+        save(options)
       end
 
       #

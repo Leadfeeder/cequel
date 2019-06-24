@@ -3,7 +3,7 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Metal::DataSet do
   posts_tn = "posts_#{SecureRandom.hex(4)}"
-  post_act_tn = "post_activity_#{SecureRandom.hex(4)}" 
+  post_act_tn = "post_activity_#{SecureRandom.hex(4)}"
 
   before :all do
     cequel.schema.create_table(posts_tn) do
@@ -110,6 +110,18 @@ describe Cequel::Metal::DataSet do
         update(:title => 'Fun times', :body => 'Fun')
       expect(cequel[posts_tn].where(row_keys).
         first[:title]).to eq('Fun times')
+    end
+
+    it "it should update only existing records" do
+      cequel[posts_tn].where(row_keys).delete
+      cequel[posts_tn].where(row_keys).update(
+        {
+          :title => 'Fun times',
+          :body => 'Fun'
+        },
+        :if_exists => true
+      )
+      expect(cequel[posts_tn].where(row_keys).first).to be_nil
     end
 
     it 'should send update statement with options' do

@@ -5,7 +5,9 @@ module Cequel
     # Internal representation of a data manipulation statement
     #
     # @abstract Subclasses must implement #write_to_statement, which writes
-    #   internal state to a Statement instance
+    #   internal state to a Statement instance. Subclasses may implement
+    #   #finalize_statement which adds final clauses to a Statement
+    #   instance state.
     #
     # @since 1.0.0
     # @api private
@@ -34,15 +36,18 @@ module Cequel
       #   data
       # @option options [Time,Integer] :timestamp the timestamp associated with
       #   the column values
+      # @option options [Boolean] :if_exists defines if `IF EXISTS` modifier
+      #   should be added to the statement (makes sense to UPDATE only)
       # @return [void]
       #
       def execute(options = {})
-        options.assert_valid_keys(:timestamp, :ttl, :consistency)
+        options.assert_valid_keys(:timestamp, :ttl, :consistency, :if_exists)
         return if empty?
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
         statement.append(*data_set.row_specifications_cql)
+        finalize_statement(statement, options)
         data_set.write_with_options(statement,
                                     consistency: consistency)
       end
@@ -75,6 +80,9 @@ module Cequel
             "#{key.to_s.upcase} #{serialized_value}"
           end.join(' AND ')
         end
+      end
+
+      def finalize_statement(_statement, _options)
       end
     end
   end

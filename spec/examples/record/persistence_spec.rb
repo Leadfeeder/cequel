@@ -157,6 +157,14 @@ describe Cequel::Record::Persistence do
           blog.save
           expect(subject[:name]).to eq('Pizza')
         end
+
+        it "should not upsert non-existing rows with `if_exists` set to true" do
+          memoized_clone = Blog.find(blog.subdomain)
+          blog.destroy
+          memoized_clone.name = 'Yet Another Blog'
+          memoized_clone.save(:if_exists => true)
+          expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
+        end
       end
     end
 
@@ -227,6 +235,13 @@ describe Cequel::Record::Persistence do
       it 'should not allow updating key values' do
         expect { blog.update_attributes(:subdomain => 'soup') }
           .to raise_error(ArgumentError)
+      end
+
+      it "should not upsert non-existing rows with `if_exists` set to true" do
+        memoized_clone = Blog.find(blog.subdomain)
+        blog.destroy
+        memoized_clone.update_attributes({:name => 'Yet Another Blog'}, :if_exists => true)
+        expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
       end
     end
 

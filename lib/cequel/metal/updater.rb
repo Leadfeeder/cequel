@@ -163,6 +163,14 @@ module Cequel
         end
         [all_statements, all_bind_vars]
       end
+
+      def finalize_statement(statement, options)
+        statement.append(generate_if_exists_clause(options))
+      end
+
+      def generate_if_exists_clause(options)
+        options[:if_exists] ? ' IF EXISTS' : ''
+      end
     end
   end
 end
