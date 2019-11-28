@@ -94,12 +94,8 @@ module Cequel
             'EXISTS'
           when :not_exists
             'NOT EXISTS'
-          when Hash
-            if_options.map { |key, value| "#{key} = #{value}" }.join(' AND ')
-          when String
-            if_options
           else
-            # TODO raise exception
+            raise ArgumentError, "Unsupported `IF` option provided"
           end
 
         ' IF ' + serialized_if_options

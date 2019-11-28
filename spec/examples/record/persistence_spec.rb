@@ -279,11 +279,6 @@ describe Cequel::Record::Persistence do
         blog.destroy(timestamp: 1.hour.ago)
         expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
       end
-
-      it 'should fail with IF EXISTS option provided for non-existing record' do
-        binding.pry
-        expect { blog.destroy(if: :exists) }.not_to raise_error
-      end
     end
   end
 
