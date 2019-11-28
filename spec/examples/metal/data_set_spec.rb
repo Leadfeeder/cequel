@@ -112,18 +112,6 @@ describe Cequel::Metal::DataSet do
         first[:title]).to eq('Fun times')
     end
 
-    it "it should update only existing records" do
-      cequel[posts_tn].where(row_keys).delete
-      cequel[posts_tn].where(row_keys).update(
-        {
-          :title => 'Fun times',
-          :body => 'Fun'
-        },
-        :if_exists => true
-      )
-      expect(cequel[posts_tn].where(row_keys).first).to be_nil
-    end
-
     it 'should send update statement with options' do
       cequel.schema.truncate_table(posts_tn)
       time = Time.now - 10.minutes
@@ -192,6 +180,18 @@ describe Cequel::Metal::DataSet do
         set(title: 'Even Bigger Data')
       end
       expect(cequel[posts_tn].where(row_keys).first[:title]).to eq('Even Bigger Data')
+    end
+
+    it "it should update only existing records with if: :exists option" do
+      cequel[posts_tn].where(row_keys).delete
+      cequel[posts_tn].where(row_keys).update(
+        {
+          :title => 'Fun times',
+          :body => 'Fun'
+        },
+        :if => :exists
+      )
+      expect(cequel[posts_tn].where(row_keys).first).to be_nil
     end
   end
 

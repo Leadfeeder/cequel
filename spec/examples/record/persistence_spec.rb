@@ -80,6 +80,17 @@ describe Cequel::Record::Persistence do
             end.save
           }.to notify_name("create.cequel")
         end
+
+        it "should not rewrite existing rows with `if: :not_exists` option" do
+          new_entry =
+            Blog.new do |blog|
+              blog.subdomain = "cequel"
+              blog.name = 'Yet Another Blog'
+            end
+          expect(new_entry).to be_new_record
+          new_entry.save(:if => :not_exists)
+          expect(subject[:name]).to eq('Cequel')
+        end
       end
 
       context 'on update' do
@@ -158,11 +169,11 @@ describe Cequel::Record::Persistence do
           expect(subject[:name]).to eq('Pizza')
         end
 
-        it "should not upsert non-existing rows with `if_exists` set to true" do
+        it "should not upsert non-existing rows with `if: :exists` option" do
           memoized_clone = Blog.find(blog.subdomain)
           blog.destroy
           memoized_clone.name = 'Yet Another Blog'
-          memoized_clone.save(:if_exists => true)
+          memoized_clone.save(:if => :exists)
           expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
         end
       end
@@ -237,10 +248,10 @@ describe Cequel::Record::Persistence do
           .to raise_error(ArgumentError)
       end
 
-      it "should not upsert non-existing rows with `if_exists` set to true" do
+      it "should not upsert non-existing rows with `if: :exists` option" do
         memoized_clone = Blog.find(blog.subdomain)
         blog.destroy
-        memoized_clone.update_attributes({:name => 'Yet Another Blog'}, :if_exists => true)
+        memoized_clone.update_attributes({:name => 'Yet Another Blog'}, :if => :exists)
         expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
       end
     end
@@ -267,6 +278,11 @@ describe Cequel::Record::Persistence do
         blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
         blog.destroy(timestamp: 1.hour.ago)
         expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
+      end
+
+      it 'should fail with IF EXISTS option provided for non-existing record' do
+        binding.pry
+        expect { blog.destroy(if: :exists) }.not_to raise_error
       end
     end
   end
