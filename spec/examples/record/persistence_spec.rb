@@ -80,6 +80,17 @@ describe Cequel::Record::Persistence do
             end.save
           }.to notify_name("create.cequel")
         end
+
+        it "should not rewrite existing rows with `if: :not_exists` option" do
+          new_entry =
+            Blog.new do |blog|
+              blog.subdomain = "cequel"
+              blog.name = 'Yet Another Blog'
+            end
+          expect(new_entry).to be_new_record
+          new_entry.save(:if => :not_exists)
+          expect(subject[:name]).to eq('Cequel')
+        end
       end
 
       context 'on update' do
@@ -157,6 +168,14 @@ describe Cequel::Record::Persistence do
           blog.save
           expect(subject[:name]).to eq('Pizza')
         end
+
+        it "should not upsert non-existing rows with `if: :exists` option" do
+          memoized_clone = Blog.find(blog.subdomain)
+          blog.destroy
+          memoized_clone.name = 'Yet Another Blog'
+          memoized_clone.save(:if => :exists)
+          expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
+        end
       end
     end
 
@@ -227,6 +246,13 @@ describe Cequel::Record::Persistence do
       it 'should not allow updating key values' do
         expect { blog.update_attributes(:subdomain => 'soup') }
           .to raise_error(ArgumentError)
+      end
+
+      it "should not upsert non-existing rows with `if: :exists` option" do
+        memoized_clone = Blog.find(blog.subdomain)
+        blog.destroy
+        memoized_clone.update_attributes({:name => 'Yet Another Blog'}, :if => :exists)
+        expect(Blog.where(subdomain: memoized_clone.subdomain).first).to be_nil
       end
     end
 

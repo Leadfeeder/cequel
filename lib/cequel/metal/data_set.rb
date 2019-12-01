@@ -119,8 +119,9 @@ module Cequel
       #
       # @return [void]
       #
-      # @note `UPDATE` statements will succeed even if targeting a row that
-      #   does not exist. In this case a new row will be created.
+      # @note By default `UPDATE` statements will succeed even if targeting
+      #   a row that does not exist. In this case a new row will be created.
+      #   To prevent this behavior use `if_exists` option set to `true`.
       # @note This statement will fail unless one or more rows are fully
       #   specified by primary key using `where`
       # @note If a enclosed in a Keyspace#batch block, this method will be

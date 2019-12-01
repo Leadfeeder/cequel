@@ -179,12 +179,14 @@ module Cequel
       #   seconds
       # @option options [Time] :timestamp the writetime to use for the column
       #   updates
+      # @option options [Boolean] :if defines `IF` modifier to be added to an
+      #   insert or update operation.
       # @return [Boolean] true if record saved successfully, false if invalid
       #
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency, :ttl, :timestamp)
+        options.assert_valid_keys(:consistency, :ttl, :timestamp, :if)
         if new_record? then create(options)
         else update(options)
         end
@@ -196,15 +198,18 @@ module Cequel
       # Set attributes and save the record
       #
       # @param attributes [Hash] hash of attributes to update
+      # @option options [Boolean] :if defines if `IF` modifier
+      #   should be added to the update statement.
       # @return [Boolean] true if saved successfully
       #
       # @see #save
       # @see Properties#attributes=
       # @see Validations#update_attributes!
       #
-      def update_attributes(attributes)
+      def update_attributes(attributes, options = {})
+        options.assert_valid_keys(:if)
         self.attributes = attributes
-        save
+        save(options)
       end
 
       #
@@ -218,7 +223,7 @@ module Cequel
       # @return [Record] self
       #
       def destroy(options = {})
-        options.assert_valid_keys(:consistency, :timestamp)
+        options.assert_valid_keys(:consistency, :timestamp, :if)
         assert_keys_present!
         metal_scope.delete(options)
         transient!
